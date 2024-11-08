@@ -56,6 +56,11 @@ services:
       # Location to store logs
       - ./logs:/logs
 
+      # ACL, ACtive Learning
+      - ./provision.local.yaml:/opt/digital_slide_archive/devops/dsa/provision.yaml
+      - /home/aza4423/wsi-superpixel-guided-labeling:/opt/wsi-superpixel-guided-labeling
+
+
       # For local development, uncomment the set of mounts associated with the
       # local source files.  Adding the editable egg directories first allows
       # mounting source files from the host without breaking the internal data.
