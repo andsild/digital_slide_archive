@@ -42,6 +42,8 @@ services:
     # Set DSA_PORT to expose the interface on another port (default 8080).
     ports:
       - "${DSA_PORT:-8080}:8080"
+    # networks:
+    #   - dsaguided2
     volumes:
       # Needed to use slicer_cli_web to run docker containers
       - /var/run/docker.sock:/var/run/docker.sock
@@ -55,11 +57,6 @@ services:
       - ./start_girder.sh:/opt/digital_slide_archive/devops/dsa/start_girder.sh
       # Location to store logs
       - ./logs:/logs
-
-      # ACL, ACtive Learning
-      - ./provision.local.yaml:/opt/digital_slide_archive/devops/dsa/provision.yaml
-      - /home/aza4423/wsi-superpixel-guided-labeling:/opt/wsi-superpixel-guided-labeling
-
 
       # For local development, uncomment the set of mounts associated with the
       # local source files.  Adding the editable egg directories first allows
@@ -97,8 +94,10 @@ services:
       - ./db:/data/db
     # Uncomment to allow access to the database from outside of the docker
     # network.
-    # ports:
-    #   - "27017"
+    ports:
+      - "${DSA_MONGODB_PORT:-27017}:27017"
+    # networks:
+    #   - dsaguided2
     logging:
       options:
         max-size: "10M"
@@ -111,6 +110,8 @@ services:
       start_period: 30s
   memcached:
     image: memcached
+    # networks:
+    #   - dsaguided2
     command: -m 4096 --max-item-size 8M
     restart: unless-stopped
     # Uncomment to allow access to memcached from outside of the docker network
@@ -127,6 +128,8 @@ services:
       retries: 3
       start_period: 30s
   rabbitmq:
+    # networks:
+    #   - dsaguided2
     image: "rabbitmq:latest"
     restart: unless-stopped
     # Uncomment to allow access to rabbitmq from outside of the docker network
@@ -147,6 +150,8 @@ services:
       timeout: 30s
       retries: 3
   worker:
+    # networks:
+    #   - dsaguided2
     image: dsarchive/dsa_common
     build:
       context: ../..
@@ -196,3 +201,7 @@ services:
       options:
         max-size: "10M"
         max-file: "5"
+networks:
+  dsaguided2:
+    name: dsaguided2
+    driver: bridge

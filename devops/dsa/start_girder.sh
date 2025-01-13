@@ -22,8 +22,8 @@ chmod 777 /var/run/docker.sock 2>/dev/null || true
 # Use iptables to make some services appear as if they are on localhost (as
 # well as on the docker network).  This is done to allow tox tests to run.
 sysctl -w net.ipv4.conf.eth0.route_localnet=1
-iptables -t nat -A OUTPUT -o lo -p tcp -m tcp --dport 27017 -j DNAT --to-destination `dig +short mongodb`:27017
-iptables -t nat -A OUTPUT -o lo -p tcp -m tcp --dport 11211 -j DNAT --to-destination `dig +short memcached`:11211
+#iptables -t nat -A OUTPUT -o lo -p tcp -m tcp --dport 27017 -j DNAT --to-destination `dig +short mongodb`:27017
+#iptables -t nat -A OUTPUT -o lo -p tcp -m tcp --dport 11211 -j DNAT --to-destination `dig +short memcached`:11211
 iptables -t nat -A POSTROUTING -o eth0 -m addrtype --src-type LOCAL --dst-type UNICAST -j MASQUERADE
 echo 'PATH="/opt/digital_slide_archive/devops/dsa/utils:/opt/venv/bin:/.pyenv/bin:/.pyenv/shims:$PATH"' >> /home/$(id -nu ${DSA_USER%%:*})/.bashrc
 echo ==== Pre-Provisioning ===
