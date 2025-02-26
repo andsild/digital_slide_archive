@@ -7,3 +7,4 @@ services:
     volumes:
       - ./provision.local.yaml:/opt/digital_slide_archive/devops/dsa/provision.yaml
       - /home/aza4423/dsa/wsi-superpixel-guided-labeling:/opt/wsi-superpixel-guided-labeling
+      - /home/aza4423/dsa/large_image:/opt/large_image

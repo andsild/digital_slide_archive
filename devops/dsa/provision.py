@@ -248,7 +248,7 @@ def pip_install(packages):
     """
     if not packages or not len(packages):
         return
-    cmd = 'pip install -q ' + ' '.join(packages)
+    cmd = 'pip install -qe ' + ' '.join(packages)
     logger.info('Installing: %s', cmd)
     try:
         subprocess.check_call(cmd, shell=True)
