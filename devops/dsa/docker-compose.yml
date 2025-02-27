@@ -1,12 +1,28 @@
 ---
 services:
+  memcached:
+    image: memcached:alpine
+    command: -m 4096 --max-item-size 8M
+    restart: unless-stopped
+    # Uncomment to allow access to memcached from outside of the docker network
+    # ports:
+    #   - "11211"
+    logging:
+      options:
+        max-size: "10M"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "bash", "-c", 'exec 3<>/dev/tcp/localhost/11211; printf "stats\nquit\n" >&3; cat <&3']
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   girder:
     image: dsarchive/dsa_common
-    build:
-      context: ../..
+    # build:
+    #   context: ../..
       # We use this to optionally set version information during the build
-      args:
-        DSA_VERSIONS: ${DSA_VERSIONS:-}
     # Instead of privileged mode, fuse can use:
     # devices:
     #   - /dev/fuse:/dev/fuse
@@ -24,11 +40,11 @@ services:
     # `DSA_USER=$(id -u):$(id -g)`).  This makes files in assetstores and logs
     # owned by that user and provides permissions to manage docker
     environment:
-      DSA_USER: ${DSA_USER:-}
-      DSA_PROVISION_YAML: ${DSA_PROVISION_YAML:-/opt/digital_slide_archive/devops/dsa/provision.yaml}
+      DSA_USER: $DSA_USER
+      DSA_PROVISION_YAML: $DSA_PROVISION_YAML
       # Mount options can be used to, for instance, add diskcache (e.g.,
       #  "-o diskcache,diskcache_size_limit=2147483648")
-      DSA_GIRDER_MOUNT_OPTIONS: ${DSA_GIRDER_MOUNT_OPTIONS:-}
+      DSA_GIRDER_MOUNT_OPTIONS: $DSA_GIRDER_MOUNT_OPTIONS
       # You can also set girder settings here:
       # GIRDER_SETTING_CORE_HTTP_ONLY_COOKIES: true
       # GIRDER_SETTING_HISTOMICSUI_LOGIN_SESSION_EXPIRY_MINUTES: 15
@@ -41,9 +57,7 @@ services:
     restart: unless-stopped
     # Set DSA_PORT to expose the interface on another port (default 8080).
     ports:
-      - "${DSA_PORT:-8080}:8080"
-    # networks:
-    #   - dsaguided2
+      - "$DSA_PORT:8080"
     volumes:
       # Needed to use slicer_cli_web to run docker containers
       - /var/run/docker.sock:/var/run/docker.sock
@@ -75,16 +89,17 @@ services:
       - rabbitmq
     command: /opt/digital_slide_archive/devops/dsa/start_girder.sh
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/system/version"]
+      test: ["CMD", "curl", "-f", "http://localhost:$DSA_PORT/api/v1/system/version"]
       interval: 5m
       timeout: 10s
       retries: 3
       start_period: 30s
+
   mongodb:
-    image: "mongo:latest"
+    image: "mongo:6.0.1"
     # Set DSA_USER to your user id (e.g., `DSA_USER=$(id -u):$(id -g)`)
     # so that database files are owned by yourself.
-    user: ${DSA_USER:-PLEASE SET DSA_USER}
+    user: $DSA_USER
     restart: unless-stopped
     # Limiting maxConns reduces the amount of shared memory demanded by
     # mongo.  Remove this limit or increase the host vm.max_map_count value.
@@ -95,9 +110,7 @@ services:
     # Uncomment to allow access to the database from outside of the docker
     # network.
     ports:
-      - "${DSA_MONGODB_PORT:-27017}:27017"
-    # networks:
-    #   - dsaguided2
+      - "$DSA_MONGODB_PORT:27017"
     logging:
       options:
         max-size: "10M"
@@ -108,36 +121,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-  memcached:
-    image: memcached
-    # networks:
-    #   - dsaguided2
-    command: -m 4096 --max-item-size 8M
-    restart: unless-stopped
-    # Uncomment to allow access to memcached from outside of the docker network
-    # ports:
-    #   - "11211"
-    logging:
-      options:
-        max-size: "10M"
-        max-file: "5"
-    healthcheck:
-      test: ["CMD", "bash", "-c", 'exec 3<>/dev/tcp/localhost/11211; printf "stats\nquit\n" >&3; cat <&3']
-      interval: 5m
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+
   rabbitmq:
-    # networks:
-    #   - dsaguided2
     image: "rabbitmq:latest"
     restart: unless-stopped
+    privileged: true
     # Uncomment to allow access to rabbitmq from outside of the docker network
     # ports:
     #   - "5672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-}
+      RABBITMQ_DEFAULT_USER: $RABBITMQ_DEFAULT_USER
+      RABBITMQ_DEFAULT_PASS: $RABBITMQ_DEFAULT_PASS
     volumes:
       - ./rabbitmq.advanced.config:/etc/rabbitmq/advanced.config:ro
     logging:
@@ -149,22 +143,21 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+
   worker:
-    # networks:
-    #   - dsaguided2
     image: dsarchive/dsa_common
-    build:
-      context: ../..
-      # We use this to optionally set version information during the build
-      args:
-        DSA_VERSIONS: ${DSA_VERSIONS:-}
+    # build:
+    #   context: ../..
+    #   # We use this to optionally set version information during the build
+    #   args:
+    #     DSA_VERSIONS: $DSA_VERSIONS
     # Set DSA_USER to a user id that is part of the docker group (e.g.,
     # `DSA_USER=$(id -u):$(id -g)`).  This provides permissions to manage
     # docker
     environment:
-      DSA_USER: ${DSA_USER:-}
-      DSA_WORKER_CONCURRENCY: ${DSA_WORKER_CONCURRENCY:-2}
-      DSA_PROVISION_YAML: ${DSA_PROVISION_YAML:-/opt/digital_slide_archive/devops/dsa/provision.yaml}
+      DSA_USER: $DSA_USER
+      DSA_WORKER_CONCURRENCY: $DSA_WORKER_CONCURRENCY
+      DSA_PROVISION_YAML: $DSA_PROVISION_YAML
       TMPDIR:
 
       # See comments about authorizing docker repositories above
@@ -181,7 +174,7 @@ services:
       # Allow overriding the start command
       - ./start_worker.sh:/opt/digital_slide_archive/devops/dsa/start_worker.sh
       # Needed to allow transferring data to slicer_cli_web docker containers
-      - ${TMPDIR:-/tmp}:${TMPDIR:-/tmp}
+      - $TMPDIR:$TMPDIR
 
       # See comments about authorizing docker repositories above
       # - /home/<user directory>/.docker:/.docker:ro
@@ -201,7 +194,3 @@ services:
       options:
         max-size: "10M"
         max-file: "5"
-networks:
-  dsaguided2:
-    name: dsaguided2
-    driver: bridge

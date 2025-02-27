@@ -1,9 +1,8 @@
 ---
-version: '3'
 services:
   girder:
     environment:
-      DSA_PROVISION_YAML: ${DSA_PROVISION_YAML:-/opt/digital_slide_archive/devops/dsa/provision.yaml}
+      DSA_PROVISION_YAML: $DSA_PROVISION_YAML
     volumes:
       - ./provision.local.yaml:/opt/digital_slide_archive/devops/dsa/provision.yaml
       - /home/aza4423/dsa/wsi-superpixel-guided-labeling:/opt/wsi-superpixel-guided-labeling
