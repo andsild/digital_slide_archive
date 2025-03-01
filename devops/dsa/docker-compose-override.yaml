@@ -6,4 +6,5 @@ services:
     volumes:
       - ./provision.local.yaml:/opt/digital_slide_archive/devops/dsa/provision.yaml
       - /home/aza4423/dsa/wsi-superpixel-guided-labeling:/opt/wsi-superpixel-guided-labeling
-      - /home/aza4423/dsa/large_image:/opt/large_image
+      #- /home/aza4423/dsa/girder_worker/:/opt/girder_worker/
+      #- /home/aza4423/dsa/large_image:/opt/large_image
