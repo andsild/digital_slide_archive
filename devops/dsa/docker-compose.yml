@@ -163,6 +163,7 @@ services:
       # See comments about authorizing docker repositories above
       # DOCKER_CONFIG: /.docker
     restart: unless-stopped
+    privileged: true
     volumes:
       # Needed to use slicer_cli_web to run docker containers
       - /var/run/docker.sock:/var/run/docker.sock
